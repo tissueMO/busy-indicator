@@ -5,6 +5,5 @@ services:
       context: manager
     image: busy-indicator-manager
     container_name: busy-indicator-manager
-    restart: always
     ports:
       - 8080:8080
