@@ -6,4 +6,4 @@ services:
     image: busy-indicator-manager
     container_name: busy-indicator-manager
     ports:
-      - 8080:8080
+      - 3002:8080
