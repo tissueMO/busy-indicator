@@ -21,9 +21,15 @@ def test_turn2():
     }), dict)
 
 @pytest.mark.dependency(depends=["test_reset"])
-def test_get():
+def test_get_one():
     result = main.get({
         "id": 101,
     })
+    assert type(result) == str
+    assert type(int(result)) == int
+
+@pytest.mark.dependency(depends=["test_reset"])
+def test_get_all():
+    result = main.get({})
     assert type(result) == str
     assert type(int(result)) == int
