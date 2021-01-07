@@ -75,13 +75,28 @@ def get(request):
     """
     conn = _get_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        f"SELECT value FROM {DBTABLE} WHERE id = ?",
-        (request["id"],)
-    )
-    result = cursor.fetchone()
 
-    return "-1" if result is None else str(result[0])
+    if "id" in request:
+        # 指定されたレコードの状態を返す
+        cursor.execute(
+            f"SELECT value FROM {DBTABLE} WHERE id = ?",
+            (request["id"],)
+        )
+        result = cursor.fetchone()
+
+        return "-1" if result is None else str(result[0])
+
+    else:
+        # すべてのレコードの状態を1文字ずつ区切って返す
+        result = cursor.execute(
+            f"SELECT value FROM {DBTABLE} ORDER BY id ASC",
+        )
+
+        output = ""
+        for state in result:
+            output += str(state[0])
+
+        return output
 
 
 if __name__ == "__main__":
