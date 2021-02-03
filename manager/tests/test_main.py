@@ -4,6 +4,11 @@
 import pytest
 import api.main as main
 
+def setup_module(module):
+    """ユニットテストではIFTTTを強制的に無効化します。
+    """
+    main.ENABLED_IFTTT = False
+
 @pytest.mark.dependency()
 def test_reset():
     assert isinstance(main.reset(), dict)

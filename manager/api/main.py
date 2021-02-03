@@ -3,6 +3,7 @@
 ##########################################################################################
 import sqlite3
 import json
+import requests
 from datetime import datetime as dt
 
 # 定数定義
@@ -16,6 +17,9 @@ config.read("./config.ini", "UTF-8")
 DBPATH = config.get("status", "path")
 DBTABLE = config.get("status", "table")
 ID_LIST = json.loads(config.get("status", "ids"))
+ENABLED_IFTTT = config.has_option("ifttt", "enabled") \
+    and config.getboolean("ifttt", "enabled")
+IFTTT_KEY = config.get("ifttt", "key") if ENABLED_IFTTT else None
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -25,6 +29,34 @@ def _get_connection() -> sqlite3.Connection:
         sqlite3.Connection: コネクションオブジェクト
     """
     return sqlite3.connect(DBPATH)
+
+
+def _turn_ifttt(device_id: int, state: bool) -> None:
+    """IFTTTのWebhookレシピを実行します。
+
+    Args:
+        device_id (int): デバイスID
+        state (bool): 更新後の状態
+    """
+    if not ENABLED_IFTTT:
+        return
+
+    device_id = int(device_id)
+    device_number = ID_LIST.index(device_id) + 1
+
+    url = f"https://maker.ifttt.com/trigger/meross_onair_{device_number}_"
+    if state:
+        url += "on"
+    else:
+        url += "off"
+    url += f"/with/key/{IFTTT_KEY}"
+
+    requests.post(
+        url,
+        data={},
+        headers={"Content-Type": "application/json"}
+    ) \
+        .raise_for_status()
 
 
 def reset():
@@ -41,6 +73,9 @@ def reset():
             f"INSERT INTO {DBTABLE} VALUES (?, ?, ?)",
             (id, 0, dt.now().strftime(DATETIME_FORMAT))
         )
+
+        # IFTTTレシピ実行
+        _turn_ifttt(id, False)
 
     conn.commit()
     return {}
@@ -62,6 +97,10 @@ def turn(request):
         (next_status, dt.now().strftime(DATETIME_FORMAT), request["id"])
     )
     conn.commit()
+
+    # IFTTTレシピ実行
+    _turn_ifttt(request["id"], next_status)
+
     return {}
 
 
@@ -100,4 +139,4 @@ def get(request):
 
 
 if __name__ == "__main__":
-    _reset()
+    reset()
