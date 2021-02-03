@@ -14,3 +14,4 @@ pytest-dependency==0.5.1
 six==1.15.0
 toml==0.10.2
 Werkzeug==1.0.1
+requests==2.25.1
