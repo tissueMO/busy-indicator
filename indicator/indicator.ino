@@ -4,8 +4,10 @@
 
 // 機器固有設定
 const int DEVICE_INDEX = 0;
+// const int DEVICE_INDEX = 1;
 const int DEVICE_COUNT = 2;
 const char *DEVICE_ID = "101";
+// const char *DEVICE_ID = "102";
 
 // ネットワーク設定
 const char *ssid = SSID;
@@ -33,9 +35,6 @@ void drawLcd(int deviceIndex, bool isBusy);
 */
 void setup()
 {
-  lastPressTime = millis() - PRESS_MILLIS_THRESHOLD;
-  lastGetTime = millis() - CHECK_INTERVAL_MILLIS;
-
   // M5StickC 初期化
   M5.begin();
 
