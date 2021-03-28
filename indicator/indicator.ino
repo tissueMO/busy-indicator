@@ -10,6 +10,8 @@ const int DEVICE_INDEX = 0;
 const int DEVICE_COUNT = 2;
 const char *DEVICE_ID = "101";
 // const char *DEVICE_ID = "102";
+// const int displayRotation = 3;
+const int displayRotation = 1;
 const bool hasLight = true;
 const bool hasTimecard = true;
 
@@ -17,7 +19,8 @@ const bool hasTimecard = true;
 const char *ssid = SSID;
 const char *password = PASSWORD;
 const char *host = HOSTNAME;
-const int port = PORT;
+const int statusPort = PORT_STATUS;
+const int timecardPort = PORT_TIMECARD;
 WiFiClient client;
 const int RESPONSE_TIMEOUT_MILLIS = 5000;
 
@@ -51,7 +54,7 @@ void setup()
   M5.begin();
 
   // LCD スクリーン初期化
-  M5.Lcd.setRotation(3);
+  M5.Lcd.setRotation(displayRotation);
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setTextSize(1);
   M5.Lcd.println("Busy Indicator");
@@ -125,7 +128,7 @@ void updateLatest()
 {
   Serial.print("Connecting to ");
   Serial.println(host);
-  if (!client.connect(host, port))
+  if (!client.connect(host, statusPort))
   {
     // HTTP通信の確立に失敗
     Serial.println("Connection failed.");
@@ -191,7 +194,7 @@ void turnBusy()
 {
   Serial.print("Connecting to ");
   Serial.println(host);
-  if (!client.connect(host, port))
+  if (!client.connect(host, statusPort))
   {
     // HTTP通信の確立に失敗
     Serial.println("Connection failed.");
@@ -240,6 +243,45 @@ void postTimecard()
   if (!hasTimecard)
   {
     return;
+  }
+
+  Serial.print("Connecting to ");
+  Serial.println(host);
+  if (!client.connect(host, timecardPort))
+  {
+    // HTTP通信の確立に失敗
+    Serial.println("Connection failed.");
+    return;
+  }
+
+  // リクエスト生成
+  String url = String("/api/timecard");
+  Serial.print("Requesting URL: ");
+  Serial.print(host);
+  Serial.println(url);
+
+  // POST リクエスト実行
+  String request =
+      String("POST ") + url + " HTTP/1.1\r\n" +
+      "Host: " + host + "\r\n" +
+      "Connection: close\r\n" +
+      "Content-Length: 0\r\n" +
+      "\r\n";
+  client.print(request);
+
+  // レスポンス返却まで待機
+  const unsigned long requestedTime = millis();
+  while (!client.available())
+  {
+    if (millis() - requestedTime > RESPONSE_TIMEOUT_MILLIS)
+    {
+      Serial.println("...Response Timeout.");
+      client.stop();
+
+      M5.Lcd.println("Timecard: Response Timeout.");
+      delay(1000);
+      return;
+    }
   }
 }
 

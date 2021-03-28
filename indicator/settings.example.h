@@ -6,7 +6,8 @@
 #define SSID xxxxxxx
 #define PASSWORD xxxxxxx
 #define HOSTNAME xxxxxxx
-#define PORT 80
+#define PORT_STATUS 80
+#define PORT_TIMECARD 80
 
 // RGB565 Dump(little endian)
 #include <pgmspace.h>
