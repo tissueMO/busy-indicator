@@ -1,5 +1,7 @@
 #include <M5StickC.h>
 #include <WiFi.h>
+#include <IRsend.h>
+#include <IRremoteESP8266.h>
 #include "settings.h"
 
 // 機器固有設定
@@ -8,6 +10,8 @@ const int DEVICE_INDEX = 0;
 const int DEVICE_COUNT = 2;
 const char *DEVICE_ID = "101";
 // const char *DEVICE_ID = "102";
+const bool hasLight = true;
+const bool hasTimecard = true;
 
 // ネットワーク設定
 const char *ssid = SSID;
@@ -20,13 +24,21 @@ const int RESPONSE_TIMEOUT_MILLIS = 5000;
 // 現在の状態管理フラグ
 bool deviceBusy = false;
 
-// Lcd描画設定
+// LCD描画設定
 const int displayBrightness = 12;
 TFT_eSprite canvas = TFT_eSprite(&M5.Lcd);
+
+// IR トランスミッター
+// M5StickC は GPIO 9 に IRトランスミッター が内蔵されている
+const uint16_t kIrLed = 9;
+IRsend irsend(kIrLed);
+const int IR_LIGHT_CODE = 0x807F00FF;
 
 // 関数プロトタイプ宣言
 void updateLatest();
 void turnBusy();
+void turnLight();
+void postTimecard();
 void clearLcd();
 void drawLcd(int deviceIndex, bool isBusy);
 
@@ -48,6 +60,9 @@ void setup()
   // ダブルバッファ用スプライト作成
   canvas.createSprite(M5.Lcd.width(), M5.Lcd.height());
   canvas.setSwapBytes(true);
+
+  // IR モジュール初期化
+  irsend.begin();
 
   // Wi-Fi 接続
   Serial.println();
@@ -84,9 +99,16 @@ void loop()
   {
     clearLcd();
     turnBusy();
+    turnLight();
   }
 
   if (M5.BtnB.wasPressed())
+  {
+    clearLcd();
+    postTimecard();
+  }
+
+  if (M5.Axp.GetBtnPress() == 2)
   {
     clearLcd();
     updateLatest();
@@ -194,6 +216,31 @@ void turnBusy()
 
   // 端末側で保持する現在の状態を更新
   deviceBusy = !deviceBusy;
+}
+
+/**
+ * 照明の点灯を切り替えます。
+ */
+void turnLight()
+{
+  if (!hasLight)
+  {
+    return;
+  }
+
+  // 赤外線を送信
+  irsend.sendNEC(IR_LIGHT_CODE);
+}
+
+/**
+ * タイムカードを打刻します。
+ */
+void postTimecard()
+{
+  if (!hasTimecard)
+  {
+    return;
+  }
 }
 
 /**
