@@ -20,6 +20,7 @@ ID_LIST = json.loads(config.get("status", "ids"))
 ENABLED_IFTTT = config.has_option("ifttt", "enabled") \
     and config.getboolean("ifttt", "enabled")
 IFTTT_KEY = config.get("ifttt", "key") if ENABLED_IFTTT else None
+SECONDARY_EVENT_MAP = json.loads(config.get("ifttt", "secondary_event_map"))
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -58,6 +59,16 @@ def _turn_ifttt(device_id: int, state: bool) -> None:
     ) \
         .raise_for_status()
 
+    # セカンダリーイベント実行
+    if str(device_id) in SECONDARY_EVENT_MAP:
+        url = f"https://maker.ifttt.com/trigger/{SECONDARY_EVENT_MAP[str(device_id)]}/with/key/{IFTTT_KEY}"
+
+        requests.post(
+            url,
+            data={},
+            headers={"Content-Type": "application/json"}
+        ) \
+            .raise_for_status()
 
 def reset():
     """データベースを初期化します。
