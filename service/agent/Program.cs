@@ -13,7 +13,8 @@ namespace agent
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            var form = new Main();
+
+            _ = new Main();
             Application.Run();
         }
     }
