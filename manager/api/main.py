@@ -45,7 +45,7 @@ def _turn_ifttt(device_id: int, state: bool) -> None:
     device_id = int(device_id)
     device_number = ID_LIST.index(device_id) + 1
 
-    url = f"https://maker.ifttt.com/trigger/meross_onair_{device_number}_"
+    url = f"https://maker.ifttt.com/trigger/switchbot_onair_{device_number}_"
     if state:
         url += "on"
     else:
